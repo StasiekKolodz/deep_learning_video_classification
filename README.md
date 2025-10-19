@@ -38,3 +38,8 @@ If you want to run training as jobs you can use job scripts I created but probab
 
 - **Task 4.1 Results:** See [results.md](results.md)
 - **Task 4.2.1 Results (No Data Leakage):** See [results_no_leakage.md](results_no_leakage.md)
+
+## Plots
+
+- **Task 4.1 Plots:** See [plots/](4.1/plots/)
+- **Task 4.2.1 Plots:** See [plots_no_leakage/](4.1/plots_no_leakage/)
