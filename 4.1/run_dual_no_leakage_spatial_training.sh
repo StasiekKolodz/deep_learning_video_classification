@@ -26,7 +26,7 @@ NC='\033[0m' # No Color
 
 # Default parameters
 DATA_ROOT="/dtu/datasets1/02516/ucf101_noleakage"
-EPOCHS=10
+EPOCHS=30
 BATCH_SIZE=64
 LR=0.0001
 NUM_WORKERS=4

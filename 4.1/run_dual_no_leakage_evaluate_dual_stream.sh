@@ -38,7 +38,7 @@ PLOT_DIR="no_leakage/plots"
 RESULTS_DIR="no_leakage/evaluations"
 
 # Models to train
-MODELS=("temporal" "spatial")
+MODELS=("spatial")
 
 # Parse command line arguments
 while [[ $# -gt 0 ]]; do

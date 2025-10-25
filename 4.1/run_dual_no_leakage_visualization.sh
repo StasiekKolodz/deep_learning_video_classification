@@ -26,7 +26,7 @@ NC='\033[0m' # No Color
 
 # Default parameters
 DATA_ROOT="/dtu/datasets1/02516/ucf101_noleakage"
-EPOCHS=30
+EPOCHS=10
 BATCH_SIZE=64
 LR=0.0001
 NUM_WORKERS=4
@@ -38,7 +38,7 @@ PLOT_DIR="no_leakage/plots"
 RESULTS_DIR="no_leakage/evaluations"
 
 # Models to train
-MODELS=("temporal")
+MODELS=("spatial" "temporal" "fusion")
 
 # Parse command line arguments
 while [[ $# -gt 0 ]]; do
@@ -167,44 +167,44 @@ print_warning() {
 # Start time
 START_TIME=$(date +%s)
 
-################################################################################
-# Phase 1: Training
-################################################################################
+# ################################################################################
+# # Phase 1: Training
+# ################################################################################
 
 
-for mode in "${MODELS[@]}"; do
-    print_step "Training ${mode} model..."
+# for mode in "${MODELS[@]}"; do
+#     print_step "Training ${mode} model..."
     
-    python 4_2_dual_stream_temporal.py \
-        --data_root "${DATA_ROOT}" \
-        --mode "${mode}" \
-        --epochs "${EPOCHS}" \
-        --batch_size "${BATCH_SIZE}" \
-        --lr "${LR}" \
-        --num_workers "${NUM_WORKERS}" \
-        --img_size "${IMG_SIZE}" \
-        --num_frames "${NUM_FRAMES}" \
-        --num_classes "${NUM_CLASSES}" \
-        --save_dir "${CHECKPOINT_DIR}" \
-        --plot_dir "${PLOT_DIR}"
+#     python 4_2_dual_stream.py \
+#         --data_root "${DATA_ROOT}" \
+#         --mode "${mode}" \
+#         --epochs "${EPOCHS}" \
+#         --batch_size "${BATCH_SIZE}" \
+#         --lr "${LR}" \
+#         --num_workers "${NUM_WORKERS}" \
+#         --img_size "${IMG_SIZE}" \
+#         --num_frames "${NUM_FRAMES}" \
+#         --num_classes "${NUM_CLASSES}" \
+#         --save_dir "${CHECKPOINT_DIR}" \
+#         --plot_dir "${PLOT_DIR}"
     
-    if [ $? -eq 0 ]; then
-        print_success "Successfully trained ${mode} model"
-    else
-        print_error "Failed to train ${mode} model"
-        exit 1
-    fi
-    echo ""
-done
+#     if [ $? -eq 0 ]; then
+#         print_success "Successfully trained ${mode} model"
+#     else
+#         print_error "Failed to train ${mode} model"
+#         exit 1
+#     fi
+#     echo ""
+# done
 
-print_success "Training phase completed!"
-else
-print_warning "Skipping training phase"
-fi
+# print_success "Training phase completed!"
+# else
+# print_warning "Skipping training phase"
+# fi
 
-################################################################################
-# Phase 2: Evaluation
-################################################################################
+###############################################################################
+#Phase 2: Evaluation
+###############################################################################
 
 # if [ "${SKIP_EVALUATION}" != true ]; then
 #     print_section "PHASE 2: EVALUATING MODELS"
@@ -223,7 +223,7 @@ fi
         
 #         result_file="${RESULTS_DIR}/results_${mode}_best.npz"
         
-#         python 4_1_evaluation.py \
+#         python 4_2_evaluation_dual_stream.py \
 #             --checkpoint "${checkpoint_path}" \
 #             --data_root "${DATA_ROOT}" \
 #             --mode "${mode}" \
@@ -258,100 +258,107 @@ fi
 #     done
 # fi
 
-# ################################################################################
-# # Phase 3: Visualization
-# ################################################################################
+################################################################################
+# Phase 3: Visualization
+################################################################################
 
-# if [ "${SKIP_VISUALIZATION}" != true ]; then
-#     print_section "PHASE 3: VISUALIZING RESULTS"
+RESULT_FILES=()
+for mode in "${MODELS[@]}"; do
+    result_file="${RESULTS_DIR}/results_${mode}_best.npz"
+    RESULT_FILES+=("${result_file}")
+done
+
+
+if [ "${SKIP_VISUALIZATION}" != true ]; then
+    print_section "PHASE 3: VISUALIZING RESULTS"
     
-#     if [ ${#RESULT_FILES[@]} -eq 0 ]; then
-#         print_warning "No result files found for visualization"
-#     else
-#         print_step "Generating visualizations for ${#RESULT_FILES[@]} models..."
+    if [ ${#RESULT_FILES[@]} -eq 0 ]; then
+        print_warning "No result files found for visualization"
+    else
+        print_step "Generating visualizations for ${#RESULT_FILES[@]} models..."
         
-#         python visualize_results.py \
-#             "${RESULT_FILES[@]}" \
-#             --save \
-#             --output_dir "${PLOT_DIR}"
+        python visualize_results.py \
+            "${RESULT_FILES[@]}" \
+            --save \
+            --output_dir "${PLOT_DIR}"
         
-#         if [ $? -eq 0 ]; then
-#             print_success "Successfully generated visualizations"
-#         else
-#             print_error "Failed to generate visualizations"
-#             exit 1
-#         fi
-#     fi
+        if [ $? -eq 0 ]; then
+            print_success "Successfully generated visualizations"
+        else
+            print_error "Failed to generate visualizations"
+            exit 1
+        fi
+    fi
     
-#     print_success "Visualization phase completed!"
-# else
-#     print_warning "Skipping visualization phase"
-# fi
+    print_success "Visualization phase completed!"
+else
+    print_warning "Skipping visualization phase"
+fi
 
-# ################################################################################
-# # Summary
-# ################################################################################
+################################################################################
+# Summary
+################################################################################
 
-# END_TIME=$(date +%s)
-# ELAPSED_TIME=$((END_TIME - START_TIME))
-# HOURS=$((ELAPSED_TIME / 3600))
-# MINUTES=$(((ELAPSED_TIME % 3600) / 60))
-# SECONDS=$((ELAPSED_TIME % 60))
+END_TIME=$(date +%s)
+ELAPSED_TIME=$((END_TIME - START_TIME))
+HOURS=$((ELAPSED_TIME / 3600))
+MINUTES=$(((ELAPSED_TIME % 3600) / 60))
+SECONDS=$((ELAPSED_TIME % 60))
 
-# print_section "WORKFLOW COMPLETED"
+print_section "WORKFLOW COMPLETED"
 
-# echo -e "${GREEN}All tasks completed successfully!${NC}"
-# echo ""
-# echo -e "${BLUE}Time elapsed: ${HOURS}h ${MINUTES}m ${SECONDS}s${NC}"
-# echo ""
-# echo -e "${BLUE}Generated files:${NC}"
-# echo -e "  Checkpoints:  ${GREEN}${CHECKPOINT_DIR}/${NC}"
-# for mode in "${MODELS[@]}"; do
-#     if [ -f "${CHECKPOINT_DIR}/${mode}_best.pth" ]; then
-#         echo -e "    • ${mode}_best.pth"
-#         echo -e "    • ${mode}_last.pth"
-#     fi
-# done
-# echo ""
-# echo -e "  Plots:        ${GREEN}${PLOT_DIR}/${NC}"
-# if [ -d "${PLOT_DIR}" ]; then
-#     for mode in "${MODELS[@]}"; do
-#         if [ -f "${PLOT_DIR}/${mode}_training_history.png" ]; then
-#             echo -e "    • ${mode}_training_history.png"
-#         fi
-#     done
-#     if [ -f "${PLOT_DIR}/model_comparison.png" ]; then
-#         echo -e "    • model_comparison.png"
-#         echo -e "    • per_class_comparison.png"
-#     fi
-# fi
-# echo ""
-# echo -e "  Results:      ${GREEN}${RESULTS_DIR}/${NC}"
-# if [ -d "${RESULTS_DIR}" ]; then
-#     for mode in "${MODELS[@]}"; do
-#         if [ -f "${RESULTS_DIR}/results_${mode}_best.npz" ]; then
-#             echo -e "    • results_${mode}_best.npz"
-#         fi
-#     done
-# fi
-# echo ""
+echo -e "${GREEN}All tasks completed successfully!${NC}"
+echo ""
+echo -e "${BLUE}Time elapsed: ${HOURS}h ${MINUTES}m ${SECONDS}s${NC}"
+echo ""
+echo -e "${BLUE}Generated files:${NC}"
+echo -e "  Checkpoints:  ${GREEN}${CHECKPOINT_DIR}/${NC}"
+for mode in "${MODELS[@]}"; do
+    if [ -f "${CHECKPOINT_DIR}/${mode}_best.pth" ]; then
+        echo -e "    • ${mode}_best.pth"
+        echo -e "    • ${mode}_last.pth"
+    fi
+done
+echo ""
+echo -e "  Plots:        ${GREEN}${PLOT_DIR}/${NC}"
+if [ -d "${PLOT_DIR}" ]; then
+    for mode in "${MODELS[@]}"; do
+        if [ -f "${PLOT_DIR}/${mode}_training_history.png" ]; then
+            echo -e "    • ${mode}_training_history.png"
+        fi
+    done
+    if [ -f "${PLOT_DIR}/model_comparison.png" ]; then
+        echo -e "    • model_comparison.png"
+        echo -e "    • per_class_comparison.png"
+    fi
+fi
+echo ""
+echo -e "  Results:      ${GREEN}${RESULTS_DIR}/${NC}"
+if [ -d "${RESULTS_DIR}" ]; then
+    for mode in "${MODELS[@]}"; do
+        if [ -f "${RESULTS_DIR}/results_${mode}_best.npz" ]; then
+            echo -e "    • results_${mode}_best.npz"
+        fi
+    done
+fi
+echo ""
 
-# # Print performance summary if results exist
-# if [ ${#RESULT_FILES[@]} -gt 0 ]; then
-#     echo -e "${BLUE}Model Performance Summary:${NC}"
-#     echo ""
+# Print performance summary if results exist
+if [ ${#RESULT_FILES[@]} -gt 0 ]; then
+    echo -e "${BLUE}Model Performance Summary:${NC}"
+    echo ""
     
-#     for mode in "${MODELS[@]}"; do
-#         result_file="${RESULTS_DIR}/results_${mode}_best.npz"
-#         if [ -f "${result_file}" ]; then
-#             # Extract accuracy using Python
-#             accuracy=$(python -c "import numpy as np; d=np.load('${result_file}'); print(f\"{d['top1_accuracy']*100:.2f}\")")
-#             echo -e "  ${mode}:$(printf '%12s' ' ')${GREEN}${accuracy}%${NC} (Top-1 Accuracy)"
-#         fi
-#     done
-#     echo ""
-# fi
+    for mode in "${MODELS[@]}"; do
+        result_file="${RESULTS_DIR}/results_${mode}_best.npz"
+        if [ -f "${result_file}" ]; then
+            # Extract accuracy using Python
+            accuracy=$(python -c "import numpy as np; d=np.load('${result_file}'); print(f\"{d['top1_accuracy']*100:.2f}\")")
+            echo -e "  ${mode}:$(printf '%12s' ' ')${GREEN}${accuracy}%${NC} (Top-1 Accuracy)"
+        fi
+    done
+    echo ""
+fi
 
-# echo -e "${CYAN}╔════════════════════════════════════════════════════════════╗${NC}"
-# echo -e "${CYAN}║               Workflow Execution Complete! 🎉              ║${NC}"
-# echo -e "${CYAN}╚════════════════════════════════════════════════════════════╝${NC}"
+echo -e "${CYAN}╔════════════════════════════════════════════════════════════╗${NC}"
+echo -e "${CYAN}║               Workflow Execution Complete! 🎉              ║${NC}"
+echo -e "${CYAN}╚════════════════════════════════════════════════════════════╝${NC}"
