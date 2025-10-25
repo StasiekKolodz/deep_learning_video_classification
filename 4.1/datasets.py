@@ -195,6 +195,25 @@ class FrameVideoCustomDataset(torch.utils.data.Dataset):
 
         return frames
 
+class TwoStreamDataset(torch.utils.data.Dataset):
+    def __init__(self, rgb_dataset, flow_dataset):
+        assert len(rgb_dataset) == len(flow_dataset), "Datasets must be same length"
+        self.rgb_dataset = rgb_dataset
+        self.flow_dataset = flow_dataset
+
+    def __len__(self):
+        return len(self.rgb_dataset)
+
+    def __getitem__(self, idx):
+        rgb, label_rgb = self.rgb_dataset[idx]
+        flow, label_flow = self.flow_dataset[idx]
+        assert label_rgb == label_flow, "Labels must match"
+        return rgb, flow, label_rgb
+
+
+
+
+
 if __name__ == '__main__':
     from torch.utils.data import DataLoader
 

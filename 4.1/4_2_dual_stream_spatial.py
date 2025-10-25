@@ -33,7 +33,7 @@ transform = transforms.Compose([
     ])
 
 training_transform = transforms.Compose([
-    transforms.RandomResizedCrop(112, scale=(0.6, 1.0)),
+    transforms.RandomResizedCrop(IMAGE_SIZE, scale=(0.6, 1.0)),
     transforms.RandomHorizontalFlip(),
     transforms.ColorJitter(brightness=0.3, contrast=0.3, saturation=0.3),
     transforms.RandomGrayscale(p=0.1),
